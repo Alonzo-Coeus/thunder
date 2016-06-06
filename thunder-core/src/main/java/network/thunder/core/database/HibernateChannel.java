@@ -1,47 +1,79 @@
 package network.thunder.core.database;
 
 import network.thunder.core.communication.NodeKey;
-import network.thunder.core.communication.layer.DIRECTION;
-import network.thunder.core.communication.layer.MessageWrapper;
-import network.thunder.core.communication.layer.high.*;
+import network.thunder.core.communication.layer.high.Channel;
+import network.thunder.core.communication.layer.high.ChannelStatus;
 import network.thunder.core.communication.layer.high.channel.ChannelSignatures;
-import network.thunder.core.communication.layer.high.payments.PaymentData;
-import network.thunder.core.communication.layer.high.payments.PaymentSecret;
-import network.thunder.core.communication.layer.high.payments.messages.ChannelUpdate;
-import network.thunder.core.communication.layer.middle.broadcasting.types.ChannelStatusObject;
-import network.thunder.core.communication.layer.middle.broadcasting.types.P2PDataObject;
-import network.thunder.core.communication.layer.middle.broadcasting.types.PubkeyIPObject;
-import network.thunder.core.database.objects.PaymentWrapper;
 import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.TransactionSignature;
-import org.jetbrains.annotations.NotNull;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Created by Jean-Pierre Rupp on 04/06/16.
+ * Created by Jean-Pierre Rupp on 05/06/16.
  */
 
-public class HibernateDBHandler implements DBHandler {
+public class HibernateChannel implements PersistentChannel {
+    @Override
+    public Optional<Channel> getChannel (PersistentSession session, Integer id) {
+        return null;
+    }
+
+    @Override
+    public Optional<Integer> insertChannel (PersistentSession session, Channel channel) {
+        return null;
+    }
+
+    @Override
+    public Iterator<Channel> getOpenChannels (PersistentSession session) {
+        return null;
+    }
+
+    @Override
+    public Iterator<Channel> getOpenChannelsForNode (PersistentSession session, NodeKey nodekey) {
+        return null;
+    }
+
+    @Override
+    public Iterator<Channel> getChannelsForNode (PersistentSession session, NodeKey nodekey) {
+        return null;
+    }
+
+    @Override
+    public Iterator<Channel> getIPObjectsWithActiveChannel (PersistentSession session) {
+        return null;
+    }
+
+    @Override
+    public void updateChannel (PersistentSession session, Channel channel) {
+
+    }
+
+    @Override
+    public void deleteChannel (PersistentSession session, Channel channel) {
+
+    }
+
     @Entity
     @Table(name = "channels")
-    class ChannelEntity {
-        private int id;
+    private class ChannelEntity {
+        private Integer id;
         private NodeKey nodeKeyClient;
         private ECKey keyClient;
         private ECKey keyServer;
         private byte[] masterPrivateKeyClient;
         private byte[] masterPrivateKeyServer;
-        private int shaChainDepthCurrent;
-        private int timestampOpen;
-        private int timestampForceClose;
+        private Integer shaChainDepthCurrent;
+        private Integer timestampOpen;
+        private Integer timestampForceClose;
         private Transaction anchorTx;
-        private int minConfirmationAnchor;
+        private Integer minConfirmationAnchor;
         private ChannelStatus channelStatus;
         private Channel.Phase phase;
         @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -49,7 +81,7 @@ public class HibernateDBHandler implements DBHandler {
         @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
         private List<PaymentSignatureEntity> paymentSignatures = new ArrayList<>();
         @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-        private List<TransactionSignatureEntity> closingSignatures = new ArrayList<>();
+        private List<ClosingSignatureEntity> closingSignatures = new ArrayList<>();
 
         public Channel toChannel() {
             List<TransactionSignature> channelTransactionSignatures = this.channelSignatures.stream()
@@ -77,15 +109,15 @@ public class HibernateDBHandler implements DBHandler {
             channel.channelSignatures = channelSignatures;
             channel.phase = phase;
             channel.closingSignatures = closingSignatures.stream()
-                    .map(TransactionSignatureEntity::getTransactionSignature)
+                    .map(ClosingSignatureEntity::getTransactionSignature)
                     .collect(Collectors.toList());
             return channel;
         }
 
-        public ChannelEntity() {
+        public ChannelEntity () {
         }
 
-        public ChannelEntity(Channel channel) {
+        public ChannelEntity (Channel channel) {
             id = channel.id;
             nodeKeyClient = channel.nodeKeyClient;
             keyClient = channel.keyClient;
@@ -106,16 +138,16 @@ public class HibernateDBHandler implements DBHandler {
                     .collect(Collectors.toList());
             phase = channel.phase;
             closingSignatures = channel.closingSignatures.stream()
-                    .map(TransactionSignatureEntity::new)
+                    .map(ClosingSignatureEntity::new)
                     .collect(Collectors.toList());
         }
 
         @Id
-        public int getId() {
+        public Integer getId() {
             return id;
         }
 
-        public void setId(int id) {
+        public void setId(Integer id) {
             this.id = id;
         }
 
@@ -159,27 +191,27 @@ public class HibernateDBHandler implements DBHandler {
             this.masterPrivateKeyServer = masterPrivateKeyServer;
         }
 
-        public int getShaChainDepthCurrent() {
+        public Integer getShaChainDepthCurrent() {
             return shaChainDepthCurrent;
         }
 
-        public void setShaChainDepthCurrent(int shaChainDepthCurrent) {
+        public void setShaChainDepthCurrent(Integer shaChainDepthCurrent) {
             this.shaChainDepthCurrent = shaChainDepthCurrent;
         }
 
-        public int getTimestampOpen() {
+        public Integer getTimestampOpen() {
             return timestampOpen;
         }
 
-        public void setTimestampOpen(int timestampOpen) {
+        public void setTimestampOpen(Integer timestampOpen) {
             this.timestampOpen = timestampOpen;
         }
 
-        public int getTimestampForceClose() {
+        public Integer getTimestampForceClose() {
             return timestampForceClose;
         }
 
-        public void setTimestampForceClose(int timestampForceClose) {
+        public void setTimestampForceClose(Integer timestampForceClose) {
             this.timestampForceClose = timestampForceClose;
         }
 
@@ -191,11 +223,11 @@ public class HibernateDBHandler implements DBHandler {
             this.anchorTx = anchorTx;
         }
 
-        public int getMinConfirmationAnchor() {
+        public Integer getMinConfirmationAnchor() {
             return minConfirmationAnchor;
         }
 
-        public void setMinConfirmationAnchor(int minConfirmationAnchor) {
+        public void setMinConfirmationAnchor(Integer minConfirmationAnchor) {
             this.minConfirmationAnchor = minConfirmationAnchor;
         }
 
@@ -231,35 +263,36 @@ public class HibernateDBHandler implements DBHandler {
             this.phase = phase;
         }
 
-        public List<TransactionSignatureEntity> getClosingSignatures() {
+        public List<ClosingSignatureEntity> getClosingSignatures() {
             return closingSignatures;
         }
 
-        public void setClosingSignatures(List<TransactionSignatureEntity> closingSignatures) {
+        public void setClosingSignatures(List<ClosingSignatureEntity> closingSignatures) {
             this.closingSignatures = closingSignatures;
         }
+
     }
 
     @Entity
-    @Table(name = "transaction_signatures")
-    class TransactionSignatureEntity {
+    @Table(name = "channel_closing_signatures")
+    private class ClosingSignatureEntity {
         private TransactionSignature transactionSignature;
-        private int id;
+        private Integer id;
 
-        public TransactionSignatureEntity() {
+        public ClosingSignatureEntity () {
         }
 
-        public TransactionSignatureEntity(TransactionSignature transactionSignature) {
+        public ClosingSignatureEntity (TransactionSignature transactionSignature) {
             this.transactionSignature = transactionSignature;
         }
 
         @Id
         @GeneratedValue
-        public int getId() {
+        public Integer getId() {
             return id;
         }
 
-        public void setId(int id) {
+        public void setId(Integer id) {
             this.id = id;
         }
 
@@ -273,25 +306,25 @@ public class HibernateDBHandler implements DBHandler {
     }
 
     @Entity
-    @Table(name = "payment_signatures")
-    class PaymentSignatureEntity {
+    @Table(name = "channel_payment_signatures")
+    private class PaymentSignatureEntity {
         private TransactionSignature transactionSignature;
-        private int id;
+        private Integer id;
 
-        public PaymentSignatureEntity() {
+        public PaymentSignatureEntity () {
         }
 
-        public PaymentSignatureEntity(TransactionSignature transactionSignature) {
+        public PaymentSignatureEntity (TransactionSignature transactionSignature) {
             this.transactionSignature = transactionSignature;
         }
 
         @Id
         @GeneratedValue
-        public int getId() {
+        public Integer getId() {
             return id;
         }
 
-        public void setId(int id) {
+        public void setId(Integer id) {
             this.id = id;
         }
 
@@ -308,22 +341,22 @@ public class HibernateDBHandler implements DBHandler {
     @Table(name = "channel_signatures")
     class ChannelSignatureEntity {
         private TransactionSignature transactionSignature;
-        private int id;
+        private Integer id;
 
-        public ChannelSignatureEntity() {
+        public ChannelSignatureEntity () {
         }
 
-        public ChannelSignatureEntity(TransactionSignature transactionSignature) {
+        public ChannelSignatureEntity (TransactionSignature transactionSignature) {
             this.transactionSignature = transactionSignature;
         }
 
         @Id
         @GeneratedValue
-        public int getId() {
+        public Integer getId() {
             return id;
         }
 
-        public void setId(int id) {
+        public void setId(Integer id) {
             this.id = id;
         }
 
@@ -335,205 +368,5 @@ public class HibernateDBHandler implements DBHandler {
             this.transactionSignature = transactionSignature;
         }
     }
-
-    @Override
-    public List<MessageWrapper> getMessageList(NodeKey nodeKey, Sha256Hash channelHash, Class c) {
-        return null;
-    }
-
-    @Override
-    public List<AckableMessage> getUnackedMessageList(NodeKey nodeKey) {
-        return null;
-    }
-
-    @Override
-    public NumberedMessage getMessageResponse(NodeKey nodeKey, long messageIdReceived) {
-        return null;
-    }
-
-    @Override
-    public void setMessageAcked(NodeKey nodeKey, long messageId) {
-
-    }
-
-    @Override
-    public void setMessageProcessed(NodeKey nodeKey, NumberedMessage message) {
-
-    }
-
-    @Override
-    public long lastProcessedMessaged(NodeKey nodeKey) {
-        return 0;
-    }
-
-    @Override
-    public long saveMessage(NodeKey nodeKey, NumberedMessage message, DIRECTION direction) {
-        return 0;
-    }
-
-    @Override
-    public void linkResponse(NodeKey nodeKey, long messageRequest, long messageResponse) {
-
-    }
-
-    @Override
-    public List<P2PDataObject> getSyncDataByFragmentIndex(int fragmentIndex) {
-        return null;
-    }
-
-    @Override
-    public List<P2PDataObject> getSyncDataIPObjects() {
-        return null;
-    }
-
-    @Override
-    public void insertIPObjects(List<P2PDataObject> ipList) {
-
-    }
-
-    @Override
-    public List<PubkeyIPObject> getIPObjects() {
-        return null;
-    }
-
-    @Override
-    public P2PDataObject getP2PDataObjectByHash(byte[] hash) {
-        return null;
-    }
-
-    @Override
-    public PubkeyIPObject getIPObject(byte[] nodeKey) {
-        return null;
-    }
-
-    @Override
-    public void invalidateP2PObject(P2PDataObject ipObject) {
-
-    }
-
-    @Override
-    public void syncDatalist(List<P2PDataObject> dataList) {
-
-    }
-
-    @Override
-    public Channel getChannel(int id) {
-        return null;
-    }
-
-    @Override
-    public Channel getChannel(Sha256Hash hash) {
-        return null;
-    }
-
-    @Override
-    public List<Channel> getChannel(NodeKey nodeKey) {
-        return null;
-    }
-
-    @Override
-    public List<Channel> getOpenChannel(NodeKey nodeKey) {
-        return null;
-    }
-
-    @Override
-    public List<Channel> getOpenChannel() {
-        return null;
-    }
-
-    @Override
-    public void insertChannel(Channel channel) {
-
-    }
-
-    @Override
-    public void updateChannelStatus (@NotNull NodeKey nodeKey, @NotNull Sha256Hash channelHash, @NotNull ECKey keyServer, Channel channel, ChannelUpdate
-            update, List<RevocationHash> revocationHash, NumberedMessage request, NumberedMessage response) {
-
-    }
-
-    @Override
-    public List<PubkeyIPObject> getIPObjectsWithActiveChannel() {
-        return null;
-    }
-
-    @Override
-    public List<ChannelStatusObject> getTopology() {
-        return null;
-    }
-
-    @Override
-    public List<PaymentData> lockPaymentsToBeRefunded(NodeKey nodeKey) {
-        return null;
-    }
-
-    @Override
-    public List<PaymentData> lockPaymentsToBeMade(NodeKey nodeKey) {
-        return null;
-    }
-
-    @Override
-    public List<PaymentData> lockPaymentsToBeRedeemed(NodeKey nodeKey) {
-        return null;
-    }
-
-    @Override
-    public void checkPaymentsList() {
-
-    }
-
-    @Override
-    public void unlockPayments(NodeKey nodeKey, List<PaymentData> paymentList) {
-
-    }
-
-    @Override
-    public NodeKey getSenderOfPayment(PaymentSecret paymentSecret) {
-        return null;
-    }
-
-    @Override
-    public void addPayment(NodeKey firstHop, PaymentData paymentWrapper) {
-
-    }
-
-    @Override
-    public void updatePayment(PaymentWrapper paymentWrapper) {
-
-    }
-
-    @Override
-    public PaymentWrapper getPayment(PaymentSecret paymentSecret) {
-        return null;
-    }
-
-    @Override
-    public PaymentSecret getPaymentSecret(PaymentSecret secret) {
-        return null;
-    }
-
-    @Override
-    public void addPaymentSecret(PaymentSecret secret) {
-
-    }
-
-    @Override
-    public List<PaymentWrapper> getAllPayments() {
-        return null;
-    }
-
-    @Override
-    public List<PaymentWrapper> getOpenPayments() {
-        return null;
-    }
-
-    @Override
-    public List<PaymentWrapper> getRefundedPayments() {
-        return null;
-    }
-
-    @Override
-    public List<PaymentWrapper> getRedeemedPayments() {
-        return null;
-    }
 }
+
