@@ -11,7 +11,8 @@ import network.thunder.core.communication.layer.middle.broadcasting.gossip.Gossi
 import network.thunder.core.communication.layer.middle.broadcasting.gossip.messages.*;
 import network.thunder.core.communication.layer.middle.broadcasting.types.P2PDataObject;
 import network.thunder.core.communication.layer.middle.broadcasting.types.PubkeyChannelObject;
-import network.thunder.core.database.InMemoryDBHandler;
+import network.thunder.core.database.DBHandler;
+import network.thunder.core.database.HibernateMemoryDBHandler;
 import network.thunder.core.etc.MockContextFactory;
 import network.thunder.core.etc.MockLNEventHelper;
 import network.thunder.core.helper.events.LNEventHelper;
@@ -40,10 +41,10 @@ public class GossipHandlerTest {
     ServerObject serverObject3 = new ServerObject();
     ServerObject serverObject4 = new ServerObject();
 
-    InMemoryDBHandler dbHandler1 = new InMemoryDBHandler();
-    InMemoryDBHandler dbHandler2 = new InMemoryDBHandler();
-    InMemoryDBHandler dbHandler3 = new InMemoryDBHandler();
-    InMemoryDBHandler dbHandler4 = new InMemoryDBHandler();
+    HibernateMemoryDBHandler dbHandler1 = new HibernateMemoryDBHandler();
+    HibernateMemoryDBHandler dbHandler2 = new HibernateMemoryDBHandler();
+    HibernateMemoryDBHandler dbHandler3 = new HibernateMemoryDBHandler();
+    HibernateMemoryDBHandler dbHandler4 = new HibernateMemoryDBHandler();
 
     ContextFactory contextFactory1 = new MockContextFactory(serverObject1, dbHandler1);
     ContextFactory contextFactory2 = new MockContextFactory(serverObject2, dbHandler2);

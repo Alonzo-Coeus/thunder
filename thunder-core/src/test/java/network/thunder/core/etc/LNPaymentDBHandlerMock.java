@@ -4,12 +4,12 @@ import network.thunder.core.communication.LNConfiguration;
 import network.thunder.core.communication.NodeKey;
 import network.thunder.core.communication.layer.high.Channel;
 import network.thunder.core.communication.layer.high.ChannelStatus;
-import network.thunder.core.database.InMemoryDBHandler;
+import network.thunder.core.database.HibernateMemoryDBHandler;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class LNPaymentDBHandlerMock extends InMemoryDBHandler {
+public class LNPaymentDBHandlerMock extends HibernateMemoryDBHandler {
     public static final long INITIAL_AMOUNT_CHANNEL = 10000000;
 
     LNConfiguration configuration = new LNConfiguration();

@@ -15,7 +15,7 @@ import network.thunder.core.communication.layer.high.payments.messages.LNPayment
 import network.thunder.core.communication.layer.high.payments.messages.LNPaymentBMessage;
 import network.thunder.core.communication.layer.high.payments.messages.LNPaymentCMessage;
 import network.thunder.core.database.DBHandler;
-import network.thunder.core.database.InMemoryDBHandler;
+import network.thunder.core.database.HibernateMemoryDBHandler;
 import network.thunder.core.etc.MockContextFactory;
 import network.thunder.core.etc.TestTools;
 import network.thunder.core.etc.Tools;
@@ -47,8 +47,8 @@ public class LNPaymentHandlerTest {
     LNPaymentProcessorImpl processor12;
     LNPaymentProcessorImpl processor21;
 
-    DBHandler dbHandler1 = new InMemoryDBHandler();
-    DBHandler dbHandler2 = new InMemoryDBHandler();
+    DBHandler dbHandler1 = new HibernateMemoryDBHandler();
+    DBHandler dbHandler2 = new HibernateMemoryDBHandler();
 
     ContextFactory contextFactory12 = new MockContextFactory(serverObject1, dbHandler1);
     ContextFactory contextFactory21 = new MockContextFactory(serverObject2, dbHandler2);

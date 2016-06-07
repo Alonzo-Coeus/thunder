@@ -10,10 +10,11 @@ import network.thunder.core.communication.layer.high.AckMessageImpl
 import network.thunder.core.communication.layer.high.AckableMessage
 import network.thunder.core.communication.layer.low.ack.AckProcessorImpl
 import network.thunder.core.database.DBHandler
-import network.thunder.core.database.InMemoryDBHandler
+import network.thunder.core.database.HibernateMemoryDBHandler
 import network.thunder.core.etc.Constants
 import network.thunder.core.helper.events.LNEventHelperImpl
 import network.thunder.core.helper.wallet.MockWallet
+import org.hibernate.Hibernate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -29,8 +30,8 @@ class AckProcessorImplTest {
     val node1 = ClientObject(serverObject2)
     val node2 = ClientObject(serverObject1)
 
-    val dbHandler1: DBHandler = InMemoryDBHandler()
-    val dbHandler2: DBHandler = InMemoryDBHandler()
+    val dbHandler1: DBHandler = HibernateMemoryDBHandler()
+    val dbHandler2: DBHandler = HibernateMemoryDBHandler()
 
     val contextFactory1 = ContextFactoryImpl(serverObject1, dbHandler1, MockWallet(Constants.getNetwork()), LNEventHelperImpl());
     val contextFactory2 = ContextFactoryImpl(serverObject2, dbHandler2, MockWallet(Constants.getNetwork()), LNEventHelperImpl());
