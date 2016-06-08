@@ -43,7 +43,6 @@ import static network.thunder.core.communication.layer.high.Channel.Phase.OPEN;
 import static network.thunder.core.database.objects.PaymentStatus.*;
 
 public class HibernateMemoryDBHandler implements DBHandler {
-    public final List<PubkeyIPObject> pubkeyIPList = Collections.synchronizedList(new ArrayList<>());
     public List<PubkeyChannelObject> pubkeyChannelList = Collections.synchronizedList(new ArrayList<>());
     public List<ChannelStatusObject> channelStatusList = Collections.synchronizedList(new ArrayList<>());
 
@@ -91,7 +90,16 @@ public class HibernateMemoryDBHandler implements DBHandler {
 
     @Override
     public List<PubkeyIPObject> getIPObjects () {
-        return new ArrayList<>(pubkeyIPList);
+        Session session = sessionFactory.openSession();
+        Transaction tx = session.beginTransaction();
+        List<PubkeyIPObject> pubkeyIPObjects = session
+                .createQuery("from HibernatePubkeyIP", HibernatePubkeyIP.class)
+                .stream()
+                .map(HibernatePubkeyIP::toPubkeyIPObject)
+                .collect(Collectors.toList());
+        tx.commit();
+        session.close();
+        return pubkeyIPObjects;
     }
 
     @Override
@@ -108,31 +116,44 @@ public class HibernateMemoryDBHandler implements DBHandler {
 
     @Override
     public PubkeyIPObject getIPObject (byte[] nodeKey) {
-        for (PubkeyIPObject p : pubkeyIPList) {
-            if (Arrays.equals(p.pubkey, nodeKey)) {
-                return p;
-            }
-        }
-        return null;
+        Session session = sessionFactory.openSession();
+        Transaction tx = session.beginTransaction();
+        PubkeyIPObject pubkeyIPObject = session
+                .createQuery("from HibernatePubkeyIP where pubkey = :pubkey", HibernatePubkeyIP.class)
+                .setParameter(":pubkey", nodeKey)
+                .uniqueResultOptional()
+                .map(HibernatePubkeyIP::toPubkeyIPObject)
+                .orElse(null);
+        tx.commit();
+        session.close();
+        return pubkeyIPObject;
     }
 
     @Override
     public void invalidateP2PObject (P2PDataObject ipObject) {
         //TODO with a real database, we rather want to invalidate them, rather then just deleting these..
+        Session session = sessionFactory.openSession();
+        Transaction tx = session.beginTransaction();
         synchronized (totalList) {
             totalList.remove(ipObject);
         }
         if (ipObject instanceof PubkeyIPObject) {
-            synchronized (pubkeyIPList) {
-                pubkeyIPList.remove(ipObject);
-            }
+            session
+                    .createQuery("delete HibernatePubkeyIP where pubkey = :pubkey")
+                    .setParameter("pubkey", ((PubkeyIPObject) ipObject).pubkey)
+                    .executeUpdate();
         }
         //TODO implement other objects
+        tx.commit();
+        session.close();
     }
 
     @Override
     public synchronized void syncDatalist (List<P2PDataObject> dataList) {
+        Session session = sessionFactory.openSession();
+        Transaction tx = session.beginTransaction();
         Iterator<P2PDataObject> iterator1 = dataList.iterator();
+
         while (iterator1.hasNext()) {
             boolean deleted = false;
             P2PDataObject object1 = iterator1.next();
@@ -155,7 +176,11 @@ public class HibernateMemoryDBHandler implements DBHandler {
                             for (int i = 0; i < P2PDataObject.NUMBER_OF_FRAGMENTS + 1; i++) {
                                 fragmentToListMap.get(i).remove(object2);
                             }
-                            pubkeyIPList.remove(object2);
+                            if (object2 instanceof PubkeyIPObject) {
+                                session.createQuery("delete HibernatePubkeyIP where pubkey = :pubkey")
+                                        .setParameter("pubkey", ((PubkeyIPObject) object2).pubkey)
+                                        .executeUpdate();
+                            }
                             pubkeyChannelList.remove(object2);
                             channelStatusList.remove(object2);
                         }
@@ -175,7 +200,11 @@ public class HibernateMemoryDBHandler implements DBHandler {
                     for (int i = 0; i < P2PDataObject.NUMBER_OF_FRAGMENTS + 1; i++) {
                         fragmentToListMap.get(i).remove(object2);
                     }
-                    pubkeyIPList.remove(object2);
+                    if (object2 instanceof PubkeyIPObject) {
+                        session.createQuery("delete HibernatePubkeyIP where pubkey = :pubkey")
+                                .setParameter("pubkey", ((PubkeyIPObject) object2).pubkey)
+                                .executeUpdate();
+                    }
                     pubkeyChannelList.remove(object2);
                     channelStatusList.remove(object2);
                 }
@@ -185,8 +214,13 @@ public class HibernateMemoryDBHandler implements DBHandler {
         for (P2PDataObject obj : dataList) {
             fragmentToListMap.get(obj.getFragmentIndex()).add(obj);
             if (obj instanceof PubkeyIPObject) {
-                if (!pubkeyIPList.contains(obj)) {
-                    pubkeyIPList.add((PubkeyIPObject) obj);
+                Boolean found = session
+                        .createNamedQuery("from HibernatePubkeyIP where pubkey = :pubkey", HibernatePubkeyIP.class)
+                        .setParameter("pubkey", ((PubkeyIPObject) obj).pubkey)
+                        .uniqueResultOptional()
+                        .isPresent();
+                if (!found) {
+                    session.save(new HibernatePubkeyIP((PubkeyIPObject) obj));
                 }
             } else if (obj instanceof PubkeyChannelObject) {
                 if (!pubkeyChannelList.contains(obj)) {
@@ -226,6 +260,9 @@ public class HibernateMemoryDBHandler implements DBHandler {
             }
             knownObjects.add(ByteBuffer.wrap(obj.getHash()));
         }
+
+        tx.commit();
+        session.close();
     }
 
     @Override
@@ -249,8 +286,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Optional<HibernateChannel> optional = session
                 .createQuery("from HibernateChannel where hash = :hash", HibernateChannel.class)
                 .setParameter("hash", hash)
-                .stream()
-                .findFirst();
+                .uniqueResultOptional();
         tx.commit();
         session.close();
         if (optional.isPresent()) {

@@ -2,7 +2,6 @@ package network.thunder.core.database;
 
 import network.thunder.core.communication.NodeKey;
 import network.thunder.core.communication.layer.high.Channel;
-import network.thunder.core.communication.layer.high.ChannelStatus;
 import network.thunder.core.communication.layer.high.channel.ChannelSignatures;
 import network.thunder.core.database.objects.HibernateConverterECKey;
 import org.bitcoinj.core.ECKey;
