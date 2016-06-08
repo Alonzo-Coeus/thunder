@@ -11,8 +11,7 @@ import javax.persistence.Table;
  * Created by Jean-Pierre Rupp on 08/06/16.
  */
 
-@Entity
-@Table(name = "pubkey_channel_object")
+@Entity(name = "PubkeyChannelObject")
 public class HibernatePubkeyChannelObject {
     private Integer id;
     private byte[] pubkeyB;

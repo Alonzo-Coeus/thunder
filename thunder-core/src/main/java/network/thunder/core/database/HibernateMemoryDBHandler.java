@@ -89,7 +89,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
         List<PubkeyIPObject> pubkeyIPObjects = session
-                .createQuery("from HibernatePubkeyIPObject", HibernatePubkeyIPObject.class)
+                .createQuery("from PubkeyIPObject", HibernatePubkeyIPObject.class)
                 .stream()
                 .map(HibernatePubkeyIPObject::toPubkeyIPObject)
                 .collect(Collectors.toList());
@@ -115,7 +115,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
         PubkeyIPObject pubkeyIPObject = session
-                .createQuery("from HibernatePubkeyIPObject where pubkey = :pubkey", HibernatePubkeyIPObject.class)
+                .createQuery("from PubkeyIPObject where pubkey = :pubkey", HibernatePubkeyIPObject.class)
                 .setParameter(":pubkey", nodeKey)
                 .uniqueResultOptional()
                 .map(HibernatePubkeyIPObject::toPubkeyIPObject)
@@ -135,7 +135,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
         }
         if (ipObject instanceof PubkeyIPObject) {
             session
-                    .createQuery("delete HibernatePubkeyIPObject where pubkey = :pubkey")
+                    .createQuery("delete PubkeyIPObject where pubkey = :pubkey")
                     .setParameter("pubkey", ((PubkeyIPObject) ipObject).pubkey)
                     .executeUpdate();
         }
@@ -173,17 +173,17 @@ public class HibernateMemoryDBHandler implements DBHandler {
                                 fragmentToListMap.get(i).remove(object2);
                             }
                             if (object2 instanceof PubkeyIPObject) {
-                                session.createQuery("delete HibernatePubkeyIPObject where pubkey = :pubkey")
+                                session.createQuery("delete PubkeyIPObject where pubkey = :pubkey")
                                         .setParameter("pubkey", ((PubkeyIPObject) object2).pubkey)
                                         .executeUpdate();
                             }
                             if (object2 instanceof PubkeyChannelObject) {
-                                session.createQuery("delete HibernatePubKeyChannel where txidAnchor = :txid")
+                                session.createQuery("delete PubKeyChannel where txidAnchor = :txid")
                                         .setParameter("txid", ((PubkeyChannelObject) object2).txidAnchor)
                                         .executeUpdate();
                             }
                             if (object2 instanceof ChannelStatusObject) {
-                                session.createQuery("delete HibernateChannelStatusObject where pubkeyA = :pubkeyA and pubkeyB = :pubkeyB")
+                                session.createQuery("delete ChannelStatusObject where pubkeyA = :pubkeyA and pubkeyB = :pubkeyB")
                                         .setParameter("pubkeyA", ((ChannelStatusObject) object2).pubkeyA)
                                         .setParameter("pubkeyB", ((ChannelStatusObject) object2).pubkeyB)
                                         .executeUpdate();
@@ -206,17 +206,17 @@ public class HibernateMemoryDBHandler implements DBHandler {
                         fragmentToListMap.get(i).remove(object2);
                     }
                     if (object2 instanceof PubkeyIPObject) {
-                        session.createQuery("delete HibernatePubkeyIPObject where pubkey = :pubkey")
+                        session.createQuery("delete PubkeyIPObject where pubkey = :pubkey")
                                 .setParameter("pubkey", ((PubkeyIPObject) object2).pubkey)
                                 .executeUpdate();
                     }
                     if (object2 instanceof PubkeyChannelObject) {
-                        session.createQuery("delete HibernatePubkeyChannelObject where txidAnchor = :txid")
+                        session.createQuery("delete PubkeyChannelObject where txidAnchor = :txid")
                                 .setParameter("txid", ((PubkeyChannelObject) object2).txidAnchor)
                                 .executeUpdate();
                     }
                     if (object2 instanceof ChannelStatusObject) {
-                        session.createQuery("delete HibernateChannelStatusObject where pubkeyA = :pubkeyA and pubkeyB = :pubkeyB")
+                        session.createQuery("delete ChannelStatusObject where pubkeyA = :pubkeyA and pubkeyB = :pubkeyB")
                                 .setParameter("pubkeyA", ((ChannelStatusObject) object2).pubkeyA)
                                 .setParameter("pubkeyB", ((ChannelStatusObject) object2).pubkeyB)
                                 .executeUpdate();
@@ -229,7 +229,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
             fragmentToListMap.get(obj.getFragmentIndex()).add(obj);
             if (obj instanceof PubkeyIPObject) {
                 Boolean found = session
-                        .createQuery("from HibernatePubkeyIPObject where pubkey = :pubkey", HibernatePubkeyIPObject.class)
+                        .createQuery("from PubkeyIPObject where pubkey = :pubkey", HibernatePubkeyIPObject.class)
                         .setParameter("pubkey", ((PubkeyIPObject) obj).pubkey)
                         .uniqueResultOptional()
                         .isPresent();
@@ -238,7 +238,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
                 }
             } else if (obj instanceof PubkeyChannelObject) {
                 Boolean found = session
-                        .createQuery("from HibernatePubkeyChannelObject where txidAnchor = :txid", HibernatePubkeyChannelObject.class)
+                        .createQuery("from PubkeyChannelObject where txidAnchor = :txid", HibernatePubkeyChannelObject.class)
                         .setParameter("txid", ((PubkeyChannelObject) obj).txidAnchor)
                         .uniqueResultOptional()
                         .isPresent();
@@ -249,7 +249,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
                 ChannelStatusObject temp = (ChannelStatusObject) obj;
                 Boolean found = session
                         .createQuery(
-                                "from HibernateChannelStatusObject where (pubkeyA = :pubkeyA and pubkeyB = :pubkeyB) " +
+                                "from ChannelStatusObject where (pubkeyA = :pubkeyA and pubkeyB = :pubkeyB) " +
                                         "or (pubkeyA = :pubkeyB and pubkeyB = :pubkeyA)",
                                 HibernateChannelStatusObject.class)
                         .setParameter("pubkeyA", temp.pubkeyA)
@@ -297,7 +297,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
         Optional<HibernateChannel> optional = session
-                .createQuery("from HibernateChannel where hash = :hash", HibernateChannel.class)
+                .createQuery("from Channel where hash = :hash", HibernateChannel.class)
                 .setParameter("hash", hash)
                 .uniqueResultOptional();
         tx.commit();
@@ -314,7 +314,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
         List<Channel> channels = session
-                .createQuery("from HibernateChannel where nodeKeyClient = :nodeKey", HibernateChannel.class)
+                .createQuery("from Channel where nodeKeyClient = :nodeKey", HibernateChannel.class)
                 .setParameter("nodeKey", nodeKey)
                 .stream()
                 .map(HibernateChannel::toChannel)
@@ -329,7 +329,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
         List<Channel> channels = session
-                .createQuery("from HibernateChannel where nodeKeyClient = :nodeKey and phase = :phase", HibernateChannel.class)
+                .createQuery("from Channel where nodeKeyClient = :nodeKey and phase = :phase", HibernateChannel.class)
                 .setParameter("nodeKey", nodeKey)
                 .setParameter("phase", OPEN)
                 .stream()
@@ -376,7 +376,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
             Session session = sessionFactory.openSession();
             Transaction tx = session.beginTransaction();
             int result = session
-                    .createQuery("delete HibernateChannel where hash = :hash", HibernateChannel.class)
+                    .createQuery("delete Channel where hash = :hash", HibernateChannel.class)
                     .setParameter("hash", channel.getHash())
                     .executeUpdate();
             if (result == 0) {
@@ -565,7 +565,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
         List<Channel> channels = session
-                .createQuery("from HibernateChannel where phase = :phase", HibernateChannel.class)
+                .createQuery("from Channel where phase = :phase", HibernateChannel.class)
                 .setParameter("phase", OPEN)
                 .stream()
                 .map(HibernateChannel::toChannel)

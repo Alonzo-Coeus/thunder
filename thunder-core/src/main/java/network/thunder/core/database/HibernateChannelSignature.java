@@ -8,8 +8,7 @@ import javax.persistence.*;
  * Created by xeno on 07/06/16.
  */
 
-@Entity
-@Table(name = "channel_signatures")
+@Entity(name = "ChannelSignature")
 class HibernateChannelSignature {
     private TransactionSignature transactionSignature;
     private Integer id;

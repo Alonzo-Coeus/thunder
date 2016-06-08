@@ -11,8 +11,7 @@ import javax.persistence.Table;
  * Created by Jean-Pierre Rupp on 07/06/16.
  */
 
-@Entity
-@Table(name = "channel_revocation_hash")
+@Entity(name = "ChannelRevocationHash")
 public class HibernateChannelRevocationHash {
     private Integer id;
     private Integer index;

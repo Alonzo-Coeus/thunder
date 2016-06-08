@@ -18,8 +18,7 @@ import java.util.stream.Collectors;
  * Created by Jean-Pierre Rupp on 05/06/16.
  */
 
-@Entity
-@Table(name = "channel")
+@Entity(name = "Channel")
 class HibernateChannel {
     private Integer id;
     private Sha256Hash hash;

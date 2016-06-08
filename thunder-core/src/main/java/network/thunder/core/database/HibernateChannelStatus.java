@@ -13,8 +13,7 @@ import java.util.stream.Collectors;
  * Created by Jean-Pierre Rupp on 07/06/16.
  */
 
-@Entity
-@Table(name = "channel_status")
+@Entity(name = "ChannelStatus")
 public class HibernateChannelStatus {
     private Integer id;
     private long amountClient;

@@ -11,8 +11,7 @@ import javax.persistence.Table;
  * Created by Jean-Pierre Rupp on 08/06/16.
  */
 
-@Entity
-@Table(name = "pubkey_ip_object")
+@Entity(name = "PubkeyIPObject")
 public class HibernatePubkeyIPObject {
     private Integer id;
     private String hostname;

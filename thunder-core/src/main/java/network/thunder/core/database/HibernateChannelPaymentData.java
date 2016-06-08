@@ -10,8 +10,7 @@ import javax.persistence.*;
  * Created by Jean-Pierre Rupp on 07/06/16.
  */
 
-@Entity
-@Table(name = "channel_payment_data")
+@Entity(name = "ChannelPaymentData")
 public class HibernateChannelPaymentData {
     private Integer id;
     private boolean sending;

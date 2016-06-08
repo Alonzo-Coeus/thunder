@@ -11,8 +11,7 @@ import javax.persistence.Table;
  * Created by Jean-Pierre Rupp on 08/06/16.
  */
 
-@Entity
-@Table(name = "channel_status_object")
+@Entity(name = "ChannelStatusObject")
 public class HibernateChannelStatusObject {
     private Integer id;
     private byte[] pubkeyA;
