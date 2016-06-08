@@ -29,7 +29,6 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.Configuration;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
@@ -43,9 +42,6 @@ import static network.thunder.core.communication.layer.high.Channel.Phase.OPEN;
 import static network.thunder.core.database.objects.PaymentStatus.*;
 
 public class HibernateMemoryDBHandler implements DBHandler {
-    public List<PubkeyChannelObject> pubkeyChannelList = Collections.synchronizedList(new ArrayList<>());
-    public List<ChannelStatusObject> channelStatusList = Collections.synchronizedList(new ArrayList<>());
-
     public Map<Integer, List<P2PDataObject>> fragmentToListMap = new HashMap<>();
 
     public final List<P2PDataObject> totalList = Collections.synchronizedList(new ArrayList<>());
@@ -93,9 +89,9 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
         List<PubkeyIPObject> pubkeyIPObjects = session
-                .createQuery("from HibernatePubkeyIP", HibernatePubkeyIP.class)
+                .createQuery("from HibernatePubkeyIPObject", HibernatePubkeyIPObject.class)
                 .stream()
-                .map(HibernatePubkeyIP::toPubkeyIPObject)
+                .map(HibernatePubkeyIPObject::toPubkeyIPObject)
                 .collect(Collectors.toList());
         tx.commit();
         session.close();
@@ -119,10 +115,10 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
         PubkeyIPObject pubkeyIPObject = session
-                .createQuery("from HibernatePubkeyIP where pubkey = :pubkey", HibernatePubkeyIP.class)
+                .createQuery("from HibernatePubkeyIPObject where pubkey = :pubkey", HibernatePubkeyIPObject.class)
                 .setParameter(":pubkey", nodeKey)
                 .uniqueResultOptional()
-                .map(HibernatePubkeyIP::toPubkeyIPObject)
+                .map(HibernatePubkeyIPObject::toPubkeyIPObject)
                 .orElse(null);
         tx.commit();
         session.close();
@@ -139,7 +135,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
         }
         if (ipObject instanceof PubkeyIPObject) {
             session
-                    .createQuery("delete HibernatePubkeyIP where pubkey = :pubkey")
+                    .createQuery("delete HibernatePubkeyIPObject where pubkey = :pubkey")
                     .setParameter("pubkey", ((PubkeyIPObject) ipObject).pubkey)
                     .executeUpdate();
         }
@@ -177,12 +173,21 @@ public class HibernateMemoryDBHandler implements DBHandler {
                                 fragmentToListMap.get(i).remove(object2);
                             }
                             if (object2 instanceof PubkeyIPObject) {
-                                session.createQuery("delete HibernatePubkeyIP where pubkey = :pubkey")
+                                session.createQuery("delete HibernatePubkeyIPObject where pubkey = :pubkey")
                                         .setParameter("pubkey", ((PubkeyIPObject) object2).pubkey)
                                         .executeUpdate();
                             }
-                            pubkeyChannelList.remove(object2);
-                            channelStatusList.remove(object2);
+                            if (object2 instanceof PubkeyChannelObject) {
+                                session.createQuery("delete HibernatePubKeyChannel where txidAnchor = :txid")
+                                        .setParameter("txid", ((PubkeyChannelObject) object2).txidAnchor)
+                                        .executeUpdate();
+                            }
+                            if (object2 instanceof ChannelStatusObject) {
+                                session.createQuery("delete HibernateChannelStatusObject where pubkeyA = :pubkeyA and pubkeyB = :pubkeyB")
+                                        .setParameter("pubkeyA", ((ChannelStatusObject) object2).pubkeyA)
+                                        .setParameter("pubkeyB", ((ChannelStatusObject) object2).pubkeyB)
+                                        .executeUpdate();
+                            }
                         }
                         deleted = true;
                     }
@@ -201,12 +206,21 @@ public class HibernateMemoryDBHandler implements DBHandler {
                         fragmentToListMap.get(i).remove(object2);
                     }
                     if (object2 instanceof PubkeyIPObject) {
-                        session.createQuery("delete HibernatePubkeyIP where pubkey = :pubkey")
+                        session.createQuery("delete HibernatePubkeyIPObject where pubkey = :pubkey")
                                 .setParameter("pubkey", ((PubkeyIPObject) object2).pubkey)
                                 .executeUpdate();
                     }
-                    pubkeyChannelList.remove(object2);
-                    channelStatusList.remove(object2);
+                    if (object2 instanceof PubkeyChannelObject) {
+                        session.createQuery("delete HibernatePubkeyChannelObject where txidAnchor = :txid")
+                                .setParameter("txid", ((PubkeyChannelObject) object2).txidAnchor)
+                                .executeUpdate();
+                    }
+                    if (object2 instanceof ChannelStatusObject) {
+                        session.createQuery("delete HibernateChannelStatusObject where pubkeyA = :pubkeyA and pubkeyB = :pubkeyB")
+                                .setParameter("pubkeyA", ((ChannelStatusObject) object2).pubkeyA)
+                                .setParameter("pubkeyB", ((ChannelStatusObject) object2).pubkeyB)
+                                .executeUpdate();
+                    }
                 }
             }
         }
@@ -215,38 +229,37 @@ public class HibernateMemoryDBHandler implements DBHandler {
             fragmentToListMap.get(obj.getFragmentIndex()).add(obj);
             if (obj instanceof PubkeyIPObject) {
                 Boolean found = session
-                        .createNamedQuery("from HibernatePubkeyIP where pubkey = :pubkey", HibernatePubkeyIP.class)
+                        .createQuery("from HibernatePubkeyIPObject where pubkey = :pubkey", HibernatePubkeyIPObject.class)
                         .setParameter("pubkey", ((PubkeyIPObject) obj).pubkey)
                         .uniqueResultOptional()
                         .isPresent();
                 if (!found) {
-                    session.save(new HibernatePubkeyIP((PubkeyIPObject) obj));
+                    session.save(new HibernatePubkeyIPObject((PubkeyIPObject) obj));
                 }
             } else if (obj instanceof PubkeyChannelObject) {
-                if (!pubkeyChannelList.contains(obj)) {
-                    pubkeyChannelList.add((PubkeyChannelObject) obj);
+                Boolean found = session
+                        .createQuery("from HibernatePubkeyChannelObject where txidAnchor = :txid", HibernatePubkeyChannelObject.class)
+                        .setParameter("txid", ((PubkeyChannelObject) obj).txidAnchor)
+                        .uniqueResultOptional()
+                        .isPresent();
+                if (!found) {
+                    session.save(new HibernatePubkeyChannelObject((PubkeyChannelObject) obj));
                 }
             } else if (obj instanceof ChannelStatusObject) {
-
                 ChannelStatusObject temp = (ChannelStatusObject) obj;
-                boolean found = false;
-                for (ChannelStatusObject object : channelStatusList) {
-                    if (Arrays.equals(object.pubkeyA, temp.pubkeyA) && Arrays.equals(object.pubkeyB, temp.pubkeyB)) {
-                        found = true;
-                        break;
-                    }
-
-                    if (Arrays.equals(object.pubkeyB, temp.pubkeyA) && Arrays.equals(object.pubkeyA, temp.pubkeyB)) {
-                        found = true;
-                        break;
-                    }
-                }
+                Boolean found = session
+                        .createQuery(
+                                "from HibernateChannelStatusObject where (pubkeyA = :pubkeyA and pubkeyB = :pubkeyB) " +
+                                        "or (pubkeyA = :pubkeyB and pubkeyB = :pubkeyA)",
+                                HibernateChannelStatusObject.class)
+                        .setParameter("pubkeyA", temp.pubkeyA)
+                        .setParameter("pubkeyB", temp.pubkeyB)
+                        .uniqueResultOptional()
+                        .isPresent();
                 if (found) {
                     continue;
-                }
-
-                if (!channelStatusList.contains(obj)) {
-                    channelStatusList.add((ChannelStatusObject) obj);
+                } else {
+                    session.save(new HibernateChannelStatusObject(temp));
                 }
             }
             List<P2PDataObject> list = getSyncDataByFragmentIndex(obj.getFragmentIndex());

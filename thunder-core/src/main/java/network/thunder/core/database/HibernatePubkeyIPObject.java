@@ -12,8 +12,8 @@ import javax.persistence.Table;
  */
 
 @Entity
-@Table(name = "pubkey_ip")
-public class HibernatePubkeyIP {
+@Table(name = "pubkey_ip_object")
+public class HibernatePubkeyIPObject {
     private Integer id;
     private String hostname;
     private int port;
@@ -21,9 +21,9 @@ public class HibernatePubkeyIP {
     private byte[] signature;
     private int timestamp;
 
-    public HibernatePubkeyIP() {}
+    public HibernatePubkeyIPObject () {}
 
-    public HibernatePubkeyIP(PubkeyIPObject pubkeyIPObject) {
+    public HibernatePubkeyIPObject (PubkeyIPObject pubkeyIPObject) {
         hostname = pubkeyIPObject.hostname;
         port = pubkeyIPObject.port;
         pubkey = pubkeyIPObject.pubkey;
