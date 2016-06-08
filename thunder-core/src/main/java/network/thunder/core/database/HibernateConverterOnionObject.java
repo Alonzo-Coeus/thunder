@@ -11,11 +11,11 @@ import javax.persistence.AttributeConverter;
 public class HibernateConverterOnionObject implements AttributeConverter<OnionObject, byte[]> {
     @Override
     public byte[] convertToDatabaseColumn (OnionObject onionObject) {
-        return onionObject.data;
+        return onionObject == null ? null : onionObject.data;
     }
 
     @Override
     public OnionObject convertToEntityAttribute (byte[] bytes) {
-        return new OnionObject(bytes);
+        return bytes == null ? null : new OnionObject(bytes);
     }
 }

@@ -5,19 +5,19 @@ import org.bitcoinj.crypto.TransactionSignature;
 import javax.persistence.*;
 
 /**
- * Created by xeno on 07/06/16.
+ * Created by Jean-Pierre Rupp on 07/06/16.
  */
 
 @Entity(name = "ChannelSignature")
-class HibernateChannelSignature {
+class HibernateChannelPaymentSignature {
     private TransactionSignature transactionSignature;
     private Integer id;
     private Integer channel;
 
-    public HibernateChannelSignature () {
+    public HibernateChannelPaymentSignature () {
     }
 
-    public HibernateChannelSignature (TransactionSignature transactionSignature) {
+    public HibernateChannelPaymentSignature (TransactionSignature transactionSignature) {
         this.transactionSignature = transactionSignature;
     }
 

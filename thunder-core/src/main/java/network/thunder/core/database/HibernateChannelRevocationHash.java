@@ -2,18 +2,14 @@ package network.thunder.core.database;
 
 import network.thunder.core.communication.layer.high.RevocationHash;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * Created by Jean-Pierre Rupp on 07/06/16.
  */
 
-@Entity(name = "ChannelRevocationHash")
+@Embeddable
 public class HibernateChannelRevocationHash {
-    private Integer id;
     private Integer index;
     private byte[] secret;
     private byte[] secretHash;
@@ -28,16 +24,6 @@ public class HibernateChannelRevocationHash {
 
     public RevocationHash toRevocationHash() {
         return new RevocationHash(index, secret, secretHash);
-    }
-
-    @Id
-    @GeneratedValue
-    public Integer getId () {
-        return id;
-    }
-
-    public void setId (Integer id) {
-        this.id = id;
     }
 
     public Integer getIndex () {

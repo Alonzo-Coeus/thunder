@@ -35,6 +35,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static network.thunder.core.communication.layer.DIRECTION.RECEIVED;
 import static network.thunder.core.communication.layer.DIRECTION.SENT;
@@ -282,11 +283,16 @@ public class HibernateMemoryDBHandler implements DBHandler {
     public Channel getChannel (int id) {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
-        HibernateChannel channel = session.get(HibernateChannel.class, id);
+        Optional<Channel> optional = session
+                .createQuery("from Channel where id = :id", HibernateChannel.class)
+                .setParameter("id", id)
+                .stream()
+                .map(HibernateChannel::toChannel)
+                .findFirst();
         tx.commit();
         session.close();
-        if (channel != null) {
-            return channel.toChannel();
+        if (optional.isPresent()) {
+            return optional.get();
         } else {
             throw new RuntimeException("Channel not found..");
         }
@@ -296,14 +302,17 @@ public class HibernateMemoryDBHandler implements DBHandler {
     public Channel getChannel (Sha256Hash hash) {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
-        Optional<HibernateChannel> optional = session
-                .createQuery("from Channel where hash = :hash", HibernateChannel.class)
+        Optional<Channel> channel = session
+                .createQuery("select channel from Channel channel where channel.hash = :hash", HibernateChannel.class)
                 .setParameter("hash", hash)
-                .uniqueResultOptional();
+                .list()
+                .stream()
+                .findFirst()
+                .map(HibernateChannel::toChannel);
         tx.commit();
         session.close();
-        if (optional.isPresent()) {
-            return optional.get().toChannel();
+        if (channel.isPresent()) {
+            return channel.get();
         } else {
             throw new RuntimeException("Channel not found..");
         }
@@ -344,7 +353,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
     public void insertChannel (Channel channel) {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
-        session.persist(new HibernateChannel(channel));
+        session.save(new HibernateChannel(channel));
         tx.commit();
         session.close();
     }
@@ -376,7 +385,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
             Session session = sessionFactory.openSession();
             Transaction tx = session.beginTransaction();
             int result = session
-                    .createQuery("delete Channel where hash = :hash", HibernateChannel.class)
+                    .createQuery("delete Channel where hash = :hash")
                     .setParameter("hash", channel.getHash())
                     .executeUpdate();
             if (result == 0) {
@@ -384,7 +393,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
                 session.close();
                 throw new RuntimeException("Not able to find channel in list, not updated..");
             } else {
-                session.persist(new HibernateChannel(channel));
+                session.save(new HibernateChannel(channel));
                 tx.commit();
                 session.close();
             }

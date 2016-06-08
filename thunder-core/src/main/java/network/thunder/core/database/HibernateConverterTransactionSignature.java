@@ -10,11 +10,11 @@ import javax.persistence.AttributeConverter;
 public class HibernateConverterTransactionSignature implements AttributeConverter<TransactionSignature, byte[]> {
     @Override
     public byte[] convertToDatabaseColumn (TransactionSignature transactionSignature) {
-        return transactionSignature.encodeToBitcoin();
+        return transactionSignature == null ? null : transactionSignature.encodeToBitcoin();
     }
 
     @Override
     public TransactionSignature convertToEntityAttribute (byte[] bytes) {
-        return TransactionSignature.decodeFromBitcoin(bytes, true, true);
+        return bytes == null ? null : TransactionSignature.decodeFromBitcoin(bytes, true, true);
     }
 }

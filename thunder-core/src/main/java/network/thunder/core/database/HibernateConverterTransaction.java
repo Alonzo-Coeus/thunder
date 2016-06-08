@@ -12,11 +12,11 @@ import javax.persistence.AttributeConverter;
 public class HibernateConverterTransaction implements AttributeConverter<Transaction, byte[]> {
     @Override
     public byte[] convertToDatabaseColumn (Transaction transaction) {
-        return transaction.bitcoinSerialize();
+        return transaction == null ? null : transaction.bitcoinSerialize();
     }
 
     @Override
     public Transaction convertToEntityAttribute (byte[] bytes) {
-        return new Transaction(Constants.getNetwork(), bytes);
+        return bytes == null ? null : new Transaction(Constants.getNetwork(), bytes);
     }
 }

@@ -20,7 +20,8 @@ import java.util.stream.Collectors;
 
 @Entity(name = "Channel")
 class HibernateChannel {
-    private Integer id;
+    private Integer dbid; // TODO: remove once tests do not attempt to collide
+    private int id;
     private Sha256Hash hash;
     private byte[] nodeKeyClient;
     private ECKey keyClient;
@@ -34,23 +35,23 @@ class HibernateChannel {
     private Integer minConfirmationAnchor;
     private HibernateChannelStatus channelStatus;
     private Channel.Phase phase;
+    private List<HibernateChannelClosingSignature> closingSignatures = new ArrayList<>();
     private List<HibernateChannelSignature> channelSignatures = new ArrayList<>();
-    private List<HibernateChannelSignature> paymentSignatures = new ArrayList<>();
-    private List<HibernateChannelSignature> closingSignatures = new ArrayList<>();
+    private List<HibernateChannelPaymentSignature> paymentSignatures = new ArrayList<>();
 
     public Channel toChannel () {
-        List<TransactionSignature> channelTransactionSignatures = this.channelSignatures.stream()
+        List<TransactionSignature> channelTransactionSignatures = channelSignatures.stream()
                 .map(HibernateChannelSignature::getTransactionSignature)
                 .collect(Collectors.toList());
-        List<TransactionSignature> paymentTransactionSignatures = this.paymentSignatures.stream()
-                .map(HibernateChannelSignature::getTransactionSignature)
+        List<TransactionSignature> paymentTransactionSignatures = paymentSignatures.stream()
+                .map(HibernateChannelPaymentSignature::getTransactionSignature)
                 .collect(Collectors.toList());
-        ChannelSignatures channelSignatures =
+        ChannelSignatures localChannelSignatures =
                 new ChannelSignatures(channelTransactionSignatures, paymentTransactionSignatures);
-        Channel channel = new Channel();
 
+        Channel channel = new Channel();
         channel.id = id;
-        channel.nodeKeyClient = new NodeKey(nodeKeyClient);
+        channel.nodeKeyClient = nodeKeyClient == null ? null : new NodeKey(nodeKeyClient);
         channel.keyClient = keyClient;
         channel.keyServer = keyServer;
         channel.masterPrivateKeyClient = masterPrivateKeyClient;
@@ -58,14 +59,14 @@ class HibernateChannel {
         channel.shaChainDepthCurrent = shaChainDepthCurrent;
         channel.timestampOpen = timestampOpen;
         channel.timestampForceClose = timestampForceClose;
-        channel.anchorTxHash = anchorTx.getHash();
+        channel.anchorTxHash = anchorTx == null ? null : anchorTx.getHash();
         channel.anchorTx = anchorTx;
         channel.minConfirmationAnchor = minConfirmationAnchor;
         channel.channelStatus = channelStatus.toChannelStatus();
-        channel.channelSignatures = channelSignatures;
+        channel.channelSignatures = localChannelSignatures;
         channel.phase = phase;
         channel.closingSignatures = closingSignatures.stream()
-                .map(HibernateChannelSignature::getTransactionSignature)
+                .map(HibernateChannelClosingSignature::getTransactionSignature)
                 .collect(Collectors.toList());
         return channel;
     }
@@ -76,7 +77,8 @@ class HibernateChannel {
     public HibernateChannel (Channel channel) {
         id = channel.id;
         hash = channel.getHash();
-        nodeKeyClient = channel.nodeKeyClient.getPubKey();
+        nodeKeyClient = channel.nodeKeyClient == null ? null
+                : channel.nodeKeyClient.getPubKey();
         keyClient = channel.keyClient;
         keyServer = channel.keyServer;
         masterPrivateKeyClient = channel.masterPrivateKeyClient;
@@ -86,29 +88,47 @@ class HibernateChannel {
         timestampForceClose = channel.timestampForceClose;
         anchorTx = channel.anchorTx;
         minConfirmationAnchor = channel.minConfirmationAnchor;
-        channelStatus = new HibernateChannelStatus(channel.channelStatus);
-        channelSignatures = channel.channelSignatures.channelSignatures.stream()
-                .map(HibernateChannelSignature::new)
-                .collect(Collectors.toList());
-        paymentSignatures = channel.channelSignatures.paymentSignatures.stream()
-                .map(HibernateChannelSignature::new)
-                .collect(Collectors.toList());
+        if (channel.channelStatus != null) {
+            channelStatus = new HibernateChannelStatus(channel.channelStatus);
+        }
+        if (channel.channelSignatures != null) {
+            if (channel.channelSignatures.channelSignatures != null) {
+                channelSignatures = channel.channelSignatures.channelSignatures.stream()
+                        .map(HibernateChannelSignature::new)
+                        .collect(Collectors.toList());
+            }
+            if (channel.channelSignatures.paymentSignatures != null) {
+                paymentSignatures = channel.channelSignatures.paymentSignatures.stream()
+                        .map(HibernateChannelPaymentSignature::new)
+                        .collect(Collectors.toList());
+            }
+        }
         phase = channel.phase;
-        closingSignatures = channel.closingSignatures.stream()
-                .map(HibernateChannelSignature::new)
-                .collect(Collectors.toList());
+        if (channel.closingSignatures != null) {
+            closingSignatures = channel.closingSignatures.stream()
+                    .map(HibernateChannelClosingSignature::new)
+                    .collect(Collectors.toList());
+        }
     }
 
     @Id
-    public Integer getId () {
+    @GeneratedValue
+    public Integer getDbid () {
+        return dbid;
+    }
+
+    public void setDbid (Integer dbid) {
+        this.dbid = dbid;
+    }
+
+    public int getId () {
         return id;
     }
 
-    public void setId (Integer id) {
+    public void setId (int id) {
         this.id = id;
     }
 
-    @Column(unique = true)
     public Sha256Hash getHash () {
         return hash;
     }
@@ -203,7 +223,7 @@ class HibernateChannel {
         this.minConfirmationAnchor = minConfirmationAnchor;
     }
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @Embedded
     public HibernateChannelStatus getChannelStatus () {
         return channelStatus;
     }
@@ -212,16 +232,16 @@ class HibernateChannel {
         this.channelStatus = channelStatus;
     }
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    public List<HibernateChannelSignature> getPaymentSignatures () {
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "channel")
+    public List<HibernateChannelPaymentSignature> getPaymentSignatures () {
         return paymentSignatures;
     }
 
-    public void setPaymentSignatures (List<HibernateChannelSignature> paymentSignatures) {
+    public void setPaymentSignatures (List<HibernateChannelPaymentSignature> paymentSignatures) {
         this.paymentSignatures = paymentSignatures;
     }
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "channel")
     public List<HibernateChannelSignature> getChannelSignatures () {
         return channelSignatures;
     }
@@ -238,12 +258,12 @@ class HibernateChannel {
         this.phase = phase;
     }
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    public List<HibernateChannelSignature> getClosingSignatures () {
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "channel")
+    public List<HibernateChannelClosingSignature> getClosingSignatures () {
         return closingSignatures;
     }
 
-    public void setClosingSignatures (List<HibernateChannelSignature> closingSignatures) {
+    public void setClosingSignatures (List<HibernateChannelClosingSignature> closingSignatures) {
         this.closingSignatures = closingSignatures;
     }
 

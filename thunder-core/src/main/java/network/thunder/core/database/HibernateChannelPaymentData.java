@@ -20,6 +20,7 @@ public class HibernateChannelPaymentData {
     private int timestampOpen;
     private int timestampRefund;
     private OnionObject onionObject;
+    private Integer channel;
 
     public HibernateChannelPaymentData () {}
 
@@ -110,5 +111,13 @@ public class HibernateChannelPaymentData {
 
     public void setOnionObject (OnionObject onionObject) {
         this.onionObject = onionObject;
+    }
+
+    public Integer getChannel () {
+        return channel;
+    }
+
+    public void setChannel (Integer channel) {
+        this.channel = channel;
     }
 }
