@@ -3,7 +3,6 @@ package network.thunder.core.database;
 import network.thunder.core.communication.NodeKey;
 import network.thunder.core.communication.layer.high.Channel;
 import network.thunder.core.communication.layer.high.channel.ChannelSignatures;
-import network.thunder.core.database.objects.HibernateConverterECKey;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
@@ -23,7 +22,7 @@ import java.util.stream.Collectors;
 class HibernateChannel {
     private int id;
     private Sha256Hash hash;
-    private byte[] nodeKeyClient;
+    private NodeKey nodeKeyClient;
     private ECKey keyClient;
     private ECKey keyServer;
     private byte[] masterPrivateKeyClient;
@@ -52,7 +51,7 @@ class HibernateChannel {
 
         Channel channel = new Channel();
         channel.id = id;
-        channel.nodeKeyClient = nodeKeyClient == null ? null : new NodeKey(nodeKeyClient);
+        channel.nodeKeyClient = nodeKeyClient;
         channel.keyClient = keyClient;
         channel.keyServer = keyServer;
         channel.masterPrivateKeyClient = masterPrivateKeyClient;
@@ -78,8 +77,7 @@ class HibernateChannel {
     public HibernateChannel (Channel channel) {
         id = channel.id;
         hash = channel.getHash();
-        nodeKeyClient = channel.nodeKeyClient == null ? null
-                : channel.nodeKeyClient.getPubKey();
+        nodeKeyClient = channel.nodeKeyClient;
         keyClient = channel.keyClient;
         keyServer = channel.keyServer;
         masterPrivateKeyClient = channel.masterPrivateKeyClient;
@@ -150,11 +148,13 @@ class HibernateChannel {
         this.hash = hash;
     }
 
-    public byte[] getNodeKeyClient () {
+    @Column
+    @Convert(converter = HibernateConverterNodeKey.class)
+    public NodeKey getNodeKeyClient () {
         return nodeKeyClient;
     }
 
-    public void setNodeKeyClient (byte[] nodeKeyClient) {
+    public void setNodeKeyClient (NodeKey nodeKeyClient) {
         this.nodeKeyClient = nodeKeyClient;
     }
 

@@ -137,7 +137,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Transaction tx = session.beginTransaction();
         PubkeyIPObject pubkeyIPObject = session
                 .createQuery("from PubkeyIPObject where pubkey = :pubkey", HibernatePubkeyIPObject.class)
-                .setParameter(":pubkey", nodeKey)
+                .setParameter("pubkey", nodeKey)
                 .list()
                 .stream()
                 .map(HibernatePubkeyIPObject::toPubkeyIPObject)
@@ -350,7 +350,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Transaction tx = session.beginTransaction();
         List<Channel> channels = session
                 .createQuery("from Channel where nodeKeyClient = :nodeKey", HibernateChannel.class)
-                .setParameter("nodeKey", nodeKey.getPubKey())
+                .setParameter("nodeKey", nodeKey)
                 .list()
                 .stream()
                 .map(HibernateChannel::toChannel)
@@ -366,7 +366,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Transaction tx = session.beginTransaction();
         List<Channel> channels = session
                 .createQuery("from Channel where nodeKeyClient = :nodeKey and phase = :phase", HibernateChannel.class)
-                .setParameter("nodeKey", nodeKey.getPubKey())
+                .setParameter("nodeKey", nodeKey)
                 .setParameter("phase", OPEN)
                 .list()
                 .stream()

@@ -1,4 +1,4 @@
-package network.thunder.core.database.objects;
+package network.thunder.core.database;
 
 import org.bitcoinj.core.ECKey;
 
