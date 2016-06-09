@@ -16,13 +16,13 @@ import java.util.stream.Collectors;
 public class HibernateChannelStatus {
     private long amountClient;
     private long amountServer;
-    private List<HibernateChannelPaymentData> paymentList = new ArrayList<>();
+    private List<HibernatePaymentData> paymentList = new ArrayList<>();
     private int feePerByte;
     private int csvDelay;
-    private HibernateChannelRevocationHash revoHashClientCurrent;
-    private HibernateChannelRevocationHash revoHashServerCurrent;
-    private HibernateChannelRevocationHash revoHashClientNext;
-    private HibernateChannelRevocationHash revoHashServerNext;
+    private HibernateRevocationHash revoHashClientCurrent;
+    private HibernateRevocationHash revoHashServerCurrent;
+    private HibernateRevocationHash revoHashClientNext;
+    private HibernateRevocationHash revoHashServerNext;
     private Address addressClient;
     private Address addressServer;
 
@@ -31,7 +31,7 @@ public class HibernateChannelStatus {
         channelStatus.amountClient = amountClient;
         channelStatus.amountServer = amountServer;
         channelStatus.paymentList = paymentList.stream()
-                .map(HibernateChannelPaymentData::toPaymentData)
+                .map(HibernatePaymentData::toPaymentData)
                 .collect(Collectors.toList());
         channelStatus.feePerByte = feePerByte;
         channelStatus.csvDelay = csvDelay;
@@ -53,24 +53,19 @@ public class HibernateChannelStatus {
     public HibernateChannelStatus(ChannelStatus channelStatus) {
         amountClient = channelStatus.amountClient;
         amountServer = channelStatus.amountServer;
-        if (channelStatus.paymentList != null) {
-            paymentList = channelStatus.paymentList.stream()
-                    .map(HibernateChannelPaymentData::new)
-                    .collect(Collectors.toList());
-        }
         feePerByte = channelStatus.feePerByte;
         csvDelay = channelStatus.csvDelay;
         if (channelStatus.revoHashClientCurrent != null) {
-            revoHashClientCurrent = new HibernateChannelRevocationHash(channelStatus.revoHashClientCurrent);
+            revoHashClientCurrent = new HibernateRevocationHash(channelStatus.revoHashClientCurrent);
         }
         if (channelStatus.revoHashServerCurrent != null) {
-            revoHashServerCurrent = new HibernateChannelRevocationHash(channelStatus.revoHashServerCurrent);
+            revoHashServerCurrent = new HibernateRevocationHash(channelStatus.revoHashServerCurrent);
         }
         if (channelStatus.revoHashClientNext != null) {
-            revoHashClientNext = new HibernateChannelRevocationHash(channelStatus.revoHashClientNext);
+            revoHashClientNext = new HibernateRevocationHash(channelStatus.revoHashClientNext);
         }
         if (channelStatus.revoHashServerNext != null) {
-            revoHashServerNext = new HibernateChannelRevocationHash(channelStatus.revoHashServerNext);
+            revoHashServerNext = new HibernateRevocationHash(channelStatus.revoHashServerNext);
         }
         addressClient = channelStatus.addressClient;
         addressServer = channelStatus.addressServer;
@@ -93,11 +88,11 @@ public class HibernateChannelStatus {
     }
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "channel")
-    public List<HibernateChannelPaymentData> getPaymentList () {
+    public List<HibernatePaymentData> getPaymentList () {
         return paymentList;
     }
 
-    public void setPaymentList (List<HibernateChannelPaymentData> paymentList) {
+    public void setPaymentList (List<HibernatePaymentData> paymentList) {
         this.paymentList = paymentList;
     }
 
@@ -132,11 +127,11 @@ public class HibernateChannelStatus {
                     column = @Column(name = "client_revocation_hash")
             )
     })
-    public HibernateChannelRevocationHash getRevoHashClientCurrent () {
+    public HibernateRevocationHash getRevoHashClientCurrent () {
         return revoHashClientCurrent;
     }
 
-    public void setRevoHashClientCurrent (HibernateChannelRevocationHash revoHashClientCurrent) {
+    public void setRevoHashClientCurrent (HibernateRevocationHash revoHashClientCurrent) {
         this.revoHashClientCurrent = revoHashClientCurrent;
     }
 
@@ -155,11 +150,11 @@ public class HibernateChannelStatus {
                     column = @Column(name = "server_revocation_hash")
             )
     })
-    public HibernateChannelRevocationHash getRevoHashServerCurrent () {
+    public HibernateRevocationHash getRevoHashServerCurrent () {
         return revoHashServerCurrent;
     }
 
-    public void setRevoHashServerCurrent (HibernateChannelRevocationHash revoHashServerCurrent) {
+    public void setRevoHashServerCurrent (HibernateRevocationHash revoHashServerCurrent) {
         this.revoHashServerCurrent = revoHashServerCurrent;
     }
 
@@ -178,11 +173,11 @@ public class HibernateChannelStatus {
                     column = @Column(name = "next_client_revocation_hash")
             )
     })
-    public HibernateChannelRevocationHash getRevoHashClientNext () {
+    public HibernateRevocationHash getRevoHashClientNext () {
         return revoHashClientNext;
     }
 
-    public void setRevoHashClientNext (HibernateChannelRevocationHash revoHashClientNext) {
+    public void setRevoHashClientNext (HibernateRevocationHash revoHashClientNext) {
         this.revoHashClientNext = revoHashClientNext;
     }
 
@@ -201,11 +196,11 @@ public class HibernateChannelStatus {
                     column = @Column(name = "next_server_revocation_hash")
             )
     })
-    public HibernateChannelRevocationHash getRevoHashServerNext () {
+    public HibernateRevocationHash getRevoHashServerNext () {
         return revoHashServerNext;
     }
 
-    public void setRevoHashServerNext (HibernateChannelRevocationHash revoHashServerNext) {
+    public void setRevoHashServerNext (HibernateRevocationHash revoHashServerNext) {
         this.revoHashServerNext = revoHashServerNext;
     }
 

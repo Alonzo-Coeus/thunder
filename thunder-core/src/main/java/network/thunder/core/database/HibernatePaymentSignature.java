@@ -8,16 +8,16 @@ import javax.persistence.*;
  * Created by Jean-Pierre Rupp on 07/06/16.
  */
 
-@Entity(name = "ChannelSignature")
-class HibernateChannelClosingSignature {
+@Entity(name = "PaymentSignature")
+class HibernatePaymentSignature {
     private TransactionSignature transactionSignature;
     private Integer id;
-    private Integer channel;
+    private HibernateChannel channel;
 
-    public HibernateChannelClosingSignature () {
+    public HibernatePaymentSignature () {
     }
 
-    public HibernateChannelClosingSignature (TransactionSignature transactionSignature) {
+    public HibernatePaymentSignature (TransactionSignature transactionSignature) {
         this.transactionSignature = transactionSignature;
     }
 
@@ -41,11 +41,12 @@ class HibernateChannelClosingSignature {
         this.transactionSignature = transactionSignature;
     }
 
-    public Integer getChannel () {
+    @ManyToOne(fetch = FetchType.LAZY)
+    public HibernateChannel getChannel () {
         return channel;
     }
 
-    public void setChannel (Integer channel) {
+    public void setChannel (HibernateChannel channel) {
         this.channel = channel;
     }
 }

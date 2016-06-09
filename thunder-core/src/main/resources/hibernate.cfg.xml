@@ -37,11 +37,11 @@
         <!-- Names the annotated entity class -->
         <mapping class="network.thunder.core.database.HibernateChannel"/>
         <mapping class="network.thunder.core.database.HibernateChannelSignature"/>
-        <mapping class="network.thunder.core.database.HibernateChannelClosingSignature"/>
-        <mapping class="network.thunder.core.database.HibernateChannelPaymentSignature"/>
+        <mapping class="network.thunder.core.database.HibernateClosingSignature"/>
+        <mapping class="network.thunder.core.database.HibernatePaymentSignature"/>
         <mapping class="network.thunder.core.database.HibernateChannelStatus"/>
-        <mapping class="network.thunder.core.database.HibernateChannelPaymentData"/>
-        <mapping class="network.thunder.core.database.HibernateChannelRevocationHash"/>
+        <mapping class="network.thunder.core.database.HibernatePaymentData"/>
+        <mapping class="network.thunder.core.database.HibernateRevocationHash"/>
         <mapping class="network.thunder.core.database.HibernatePubkeyIPObject"/>
         <mapping class="network.thunder.core.database.HibernatePubkeyChannelObject"/>
         <mapping class="network.thunder.core.database.HibernateChannelStatusObject"/>

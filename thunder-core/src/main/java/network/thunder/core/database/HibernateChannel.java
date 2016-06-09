@@ -35,16 +35,16 @@ class HibernateChannel {
     private Integer minConfirmationAnchor;
     private HibernateChannelStatus channelStatus;
     private Channel.Phase phase;
-    private List<HibernateChannelClosingSignature> closingSignatures = new ArrayList<>();
+    private List<HibernateClosingSignature> closingSignatures = new ArrayList<>();
     private List<HibernateChannelSignature> channelSignatures = new ArrayList<>();
-    private List<HibernateChannelPaymentSignature> paymentSignatures = new ArrayList<>();
+    private List<HibernatePaymentSignature> paymentSignatures = new ArrayList<>();
 
     public Channel toChannel () {
         List<TransactionSignature> channelTransactionSignatures = channelSignatures.stream()
                 .map(HibernateChannelSignature::getTransactionSignature)
                 .collect(Collectors.toList());
         List<TransactionSignature> paymentTransactionSignatures = paymentSignatures.stream()
-                .map(HibernateChannelPaymentSignature::getTransactionSignature)
+                .map(HibernatePaymentSignature::getTransactionSignature)
                 .collect(Collectors.toList());
         ChannelSignatures localChannelSignatures =
                 new ChannelSignatures(channelTransactionSignatures, paymentTransactionSignatures);
@@ -66,7 +66,7 @@ class HibernateChannel {
         channel.channelSignatures = localChannelSignatures;
         channel.phase = phase;
         channel.closingSignatures = closingSignatures.stream()
-                .map(HibernateChannelClosingSignature::getTransactionSignature)
+                .map(HibernateClosingSignature::getTransactionSignature)
                 .collect(Collectors.toList());
         return channel;
     }
@@ -91,24 +91,7 @@ class HibernateChannel {
         if (channel.channelStatus != null) {
             channelStatus = new HibernateChannelStatus(channel.channelStatus);
         }
-        if (channel.channelSignatures != null) {
-            if (channel.channelSignatures.channelSignatures != null) {
-                channelSignatures = channel.channelSignatures.channelSignatures.stream()
-                        .map(HibernateChannelSignature::new)
-                        .collect(Collectors.toList());
-            }
-            if (channel.channelSignatures.paymentSignatures != null) {
-                paymentSignatures = channel.channelSignatures.paymentSignatures.stream()
-                        .map(HibernateChannelPaymentSignature::new)
-                        .collect(Collectors.toList());
-            }
-        }
         phase = channel.phase;
-        if (channel.closingSignatures != null) {
-            closingSignatures = channel.closingSignatures.stream()
-                    .map(HibernateChannelClosingSignature::new)
-                    .collect(Collectors.toList());
-        }
     }
 
     @Id
@@ -233,11 +216,11 @@ class HibernateChannel {
     }
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "channel")
-    public List<HibernateChannelPaymentSignature> getPaymentSignatures () {
+    public List<HibernatePaymentSignature> getPaymentSignatures () {
         return paymentSignatures;
     }
 
-    public void setPaymentSignatures (List<HibernateChannelPaymentSignature> paymentSignatures) {
+    public void setPaymentSignatures (List<HibernatePaymentSignature> paymentSignatures) {
         this.paymentSignatures = paymentSignatures;
     }
 
@@ -259,11 +242,11 @@ class HibernateChannel {
     }
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "channel")
-    public List<HibernateChannelClosingSignature> getClosingSignatures () {
+    public List<HibernateClosingSignature> getClosingSignatures () {
         return closingSignatures;
     }
 
-    public void setClosingSignatures (List<HibernateChannelClosingSignature> closingSignatures) {
+    public void setClosingSignatures (List<HibernateClosingSignature> closingSignatures) {
         this.closingSignatures = closingSignatures;
     }
 

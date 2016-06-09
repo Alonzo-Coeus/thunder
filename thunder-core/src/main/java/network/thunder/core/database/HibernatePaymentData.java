@@ -10,8 +10,8 @@ import javax.persistence.*;
  * Created by Jean-Pierre Rupp on 07/06/16.
  */
 
-@Entity(name = "ChannelPaymentData")
-public class HibernateChannelPaymentData {
+@Entity(name = "PaymentData")
+public class HibernatePaymentData {
     private Integer id;
     private boolean sending;
     private long amount;
@@ -20,11 +20,11 @@ public class HibernateChannelPaymentData {
     private int timestampOpen;
     private int timestampRefund;
     private OnionObject onionObject;
-    private Integer channel;
+    private HibernateChannel channel;
 
-    public HibernateChannelPaymentData () {}
+    public HibernatePaymentData () {}
 
-    public HibernateChannelPaymentData (PaymentData paymentData) {
+    public HibernatePaymentData (PaymentData paymentData) {
         sending = paymentData.sending;
         amount = paymentData.amount;
         secret = paymentData.secret.secret;
@@ -113,11 +113,12 @@ public class HibernateChannelPaymentData {
         this.onionObject = onionObject;
     }
 
-    public Integer getChannel () {
+    @ManyToOne(fetch = FetchType.LAZY)
+    public HibernateChannel getChannel () {
         return channel;
     }
 
-    public void setChannel (Integer channel) {
+    public void setChannel (HibernateChannel channel) {
         this.channel = channel;
     }
 }

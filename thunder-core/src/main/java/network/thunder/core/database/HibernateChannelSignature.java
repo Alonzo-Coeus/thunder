@@ -12,7 +12,7 @@ import javax.persistence.*;
 class HibernateChannelSignature {
     private TransactionSignature transactionSignature;
     private Integer id;
-    private Integer channel;
+    private HibernateChannel channel;
 
     public HibernateChannelSignature () {
     }
@@ -41,11 +41,12 @@ class HibernateChannelSignature {
         this.transactionSignature = transactionSignature;
     }
 
-    public Integer getChannel () {
+    @ManyToOne(fetch = FetchType.LAZY)
+    public HibernateChannel getChannel () {
         return channel;
     }
 
-    public void setChannel (Integer channel) {
+    public void setChannel (HibernateChannel channel) {
         this.channel = channel;
     }
 }

@@ -9,14 +9,14 @@ import javax.persistence.*;
  */
 
 @Embeddable
-public class HibernateChannelRevocationHash {
+public class HibernateRevocationHash {
     private Integer index;
     private byte[] secret;
     private byte[] secretHash;
 
-    public HibernateChannelRevocationHash() {}
+    public HibernateRevocationHash () {}
 
-    public HibernateChannelRevocationHash(RevocationHash revocationHash) {
+    public HibernateRevocationHash (RevocationHash revocationHash) {
         index = revocationHash.index;
         secret = revocationHash.secret;
         secretHash = revocationHash.secretHash;

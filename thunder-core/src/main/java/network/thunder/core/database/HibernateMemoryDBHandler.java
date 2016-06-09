@@ -35,7 +35,6 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static network.thunder.core.communication.layer.DIRECTION.RECEIVED;
 import static network.thunder.core.communication.layer.DIRECTION.SENT;
@@ -353,7 +352,42 @@ public class HibernateMemoryDBHandler implements DBHandler {
     public void insertChannel (Channel channel) {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
-        session.save(new HibernateChannel(channel));
+        HibernateChannel hibernateChannel = new HibernateChannel(channel);
+        session.save(hibernateChannel);
+        if (channel.closingSignatures != null) {
+            channel.closingSignatures.forEach(signature -> {
+                HibernateClosingSignature closingSignature = new HibernateClosingSignature(signature);
+                closingSignature.setChannel(hibernateChannel);
+                hibernateChannel.getClosingSignatures().add(closingSignature);
+                session.save(closingSignature);
+            });
+        }
+        if (channel.channelSignatures != null) {
+            if (channel.channelSignatures.paymentSignatures != null) {
+                channel.channelSignatures.paymentSignatures.forEach(signature -> {
+                    HibernatePaymentSignature paymentSignature = new HibernatePaymentSignature(signature);
+                    paymentSignature.setChannel(hibernateChannel);
+                    hibernateChannel.getPaymentSignatures().add(paymentSignature);
+                    session.save(paymentSignature);
+                });
+            }
+            if (channel.channelSignatures.channelSignatures != null) {
+                channel.channelSignatures.channelSignatures.forEach(signature -> {
+                    HibernateChannelSignature channelSignature = new HibernateChannelSignature(signature);
+                    channelSignature.setChannel(hibernateChannel);
+                    hibernateChannel.getChannelSignatures().add(channelSignature);
+                    session.save(channelSignature);
+                });
+            }
+        }
+        if (channel.channelStatus != null && channel.channelStatus.paymentList != null) {
+            channel.channelStatus.paymentList.forEach(payment -> {
+                HibernatePaymentData paymentData = new HibernatePaymentData(payment);
+                paymentData.setChannel(hibernateChannel);
+                hibernateChannel.getChannelStatus().getPaymentList().add(paymentData);
+                session.save(paymentData);
+            });
+        }
         tx.commit();
         session.close();
     }

@@ -1,6 +1,7 @@
 package network.thunder.core.database;
 
 import org.bitcoinj.crypto.TransactionSignature;
+import org.hibernate.Hibernate;
 
 import javax.persistence.*;
 
@@ -8,16 +9,16 @@ import javax.persistence.*;
  * Created by Jean-Pierre Rupp on 07/06/16.
  */
 
-@Entity(name = "ChannelSignature")
-class HibernateChannelPaymentSignature {
+@Entity(name = "ClosingSignature")
+class HibernateClosingSignature {
     private TransactionSignature transactionSignature;
     private Integer id;
-    private Integer channel;
+    private HibernateChannel channel;
 
-    public HibernateChannelPaymentSignature () {
+    public HibernateClosingSignature () {
     }
 
-    public HibernateChannelPaymentSignature (TransactionSignature transactionSignature) {
+    public HibernateClosingSignature (TransactionSignature transactionSignature) {
         this.transactionSignature = transactionSignature;
     }
 
@@ -41,11 +42,12 @@ class HibernateChannelPaymentSignature {
         this.transactionSignature = transactionSignature;
     }
 
-    public Integer getChannel () {
+    @ManyToOne(fetch = FetchType.LAZY)
+    public HibernateChannel getChannel () {
         return channel;
     }
 
-    public void setChannel (Integer channel) {
+    public void setChannel (HibernateChannel channel) {
         this.channel = channel;
     }
 }
