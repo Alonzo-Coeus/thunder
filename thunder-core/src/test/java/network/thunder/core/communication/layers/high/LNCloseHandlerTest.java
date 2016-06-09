@@ -53,8 +53,8 @@ public class LNCloseHandlerTest {
     LNCloseProcessorImpl processor1;
     LNCloseProcessorImpl processor2;
 
-    DBHandler dbHandler1 = new HibernateMemoryDBHandler();
-    DBHandler dbHandler2 = new HibernateMemoryDBHandler();
+    DBHandler dbHandler1 = new HibernateMemoryDBHandler("closeTestOne");
+    DBHandler dbHandler2 = new HibernateMemoryDBHandler("closeTestTwo");
 
     MockBlockchainHelper mockBlockchainHelper = new MockBlockchainHelper();
     MockBroadcastHelper broadcastHelper = new MockBroadcastHelper();
@@ -99,6 +99,7 @@ public class LNCloseHandlerTest {
         m = (Message) embeddedChannel1.readOutbound();
         assertNull(m);
 
+        java.lang.System.out.println(channel1);
         contextFactory1.getChannelManager().closeChannel(channel1, new NullResultCommand());
     }
 

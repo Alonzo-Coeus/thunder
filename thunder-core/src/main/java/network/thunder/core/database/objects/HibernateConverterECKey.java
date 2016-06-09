@@ -10,11 +10,11 @@ import javax.persistence.AttributeConverter;
 public class HibernateConverterECKey implements AttributeConverter<ECKey, byte[]> {
     @Override
     public byte[] convertToDatabaseColumn (ECKey ecKey) {
-        return ecKey.toASN1();
+        return ecKey == null ? null : ecKey.toASN1();
     }
 
     @Override
     public ECKey convertToEntityAttribute (byte[] bytes) {
-        return ECKey.fromASN1(bytes);
+        return bytes == null ? null : ECKey.fromASN1(bytes);
     }
 }

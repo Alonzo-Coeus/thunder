@@ -44,8 +44,8 @@ public class LNEstablishHandlerTest {
     LNEstablishProcessorImpl processor1;
     LNEstablishProcessorImpl processor2;
 
-    DBHandler dbHandler1 = new HibernateMemoryDBHandler();
-    DBHandler dbHandler2 = new HibernateMemoryDBHandler();
+    DBHandler dbHandler1 = new HibernateMemoryDBHandler("establishTestOne");
+    DBHandler dbHandler2 = new HibernateMemoryDBHandler("establishTestTwo");
 
     MockBlockchainHelper mockBlockchainHelper = new MockBlockchainHelper();
     MockBroadcastHelper broadcastHelper = new MockBroadcastHelper();

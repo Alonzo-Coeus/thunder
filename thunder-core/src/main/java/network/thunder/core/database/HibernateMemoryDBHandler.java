@@ -29,6 +29,7 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Configuration;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
@@ -63,16 +64,35 @@ public class HibernateMemoryDBHandler implements DBHandler {
     private SessionFactory sessionFactory;
 
     public HibernateMemoryDBHandler () {
-        final StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
-                .configure()
-                .build();
-        try {
-            sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory();
-        }
-        catch (Exception e) {
-            StandardServiceRegistryBuilder.destroy(registry);
-            throw e;
-        }
+        this("thunder");
+    }
+
+    public HibernateMemoryDBHandler (String name) {
+        Properties properties = new Properties();
+        properties.put("hibernate.connection.driver_class", "org.h2.Driver");
+        properties.put("hibernate.connection.url", "jdbc:h2:mem:" + name + ";DB_CLOSE_DELAY=-1;MVCC=TRUE");
+        properties.put("hibernate.connection.username", "sa");
+        properties.put("hibernate.connection.password", "");
+        properties.put("hibernate.connection.pool_size", 1);
+        properties.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
+        properties.put("hibernate.cache.provider_class", "org.hibernate.cache.internal.NoCacheProvider");
+        properties.put("hibernate.hbm2ddl.auto", "create-drop");
+        properties.put("hibernate.show_sql", "true");
+
+        Configuration configuration = new Configuration();
+
+        configuration
+                .addAnnotatedClass(HibernateChannel.class)
+                .addAnnotatedClass(HibernateClosingSignature.class)
+                .addAnnotatedClass(HibernateChannelSignature.class)
+                .addAnnotatedClass(HibernatePaymentSignature.class)
+                .addAnnotatedClass(HibernatePaymentData.class)
+                .addAnnotatedClass(HibernateChannelStatusObject.class)
+                .addAnnotatedClass(HibernatePubkeyChannelObject.class)
+                .addAnnotatedClass(HibernatePubkeyIPObject.class)
+                .addProperties(properties);
+
+        sessionFactory = configuration.buildSessionFactory();
 
         for (int i = 0; i < P2PDataObject.NUMBER_OF_FRAGMENTS + 1; i++) {
             fragmentToListMap.put(i, Collections.synchronizedList(new ArrayList<>()));
@@ -90,6 +110,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Transaction tx = session.beginTransaction();
         List<PubkeyIPObject> pubkeyIPObjects = session
                 .createQuery("from PubkeyIPObject", HibernatePubkeyIPObject.class)
+                .list()
                 .stream()
                 .map(HibernatePubkeyIPObject::toPubkeyIPObject)
                 .collect(Collectors.toList());
@@ -117,8 +138,10 @@ public class HibernateMemoryDBHandler implements DBHandler {
         PubkeyIPObject pubkeyIPObject = session
                 .createQuery("from PubkeyIPObject where pubkey = :pubkey", HibernatePubkeyIPObject.class)
                 .setParameter(":pubkey", nodeKey)
-                .uniqueResultOptional()
+                .list()
+                .stream()
                 .map(HibernatePubkeyIPObject::toPubkeyIPObject)
+                .findFirst()
                 .orElse(null);
         tx.commit();
         session.close();
@@ -231,7 +254,9 @@ public class HibernateMemoryDBHandler implements DBHandler {
                 Boolean found = session
                         .createQuery("from PubkeyIPObject where pubkey = :pubkey", HibernatePubkeyIPObject.class)
                         .setParameter("pubkey", ((PubkeyIPObject) obj).pubkey)
-                        .uniqueResultOptional()
+                        .list()
+                        .stream()
+                        .findFirst()
                         .isPresent();
                 if (!found) {
                     session.save(new HibernatePubkeyIPObject((PubkeyIPObject) obj));
@@ -240,7 +265,9 @@ public class HibernateMemoryDBHandler implements DBHandler {
                 Boolean found = session
                         .createQuery("from PubkeyChannelObject where txidAnchor = :txid", HibernatePubkeyChannelObject.class)
                         .setParameter("txid", ((PubkeyChannelObject) obj).txidAnchor)
-                        .uniqueResultOptional()
+                        .list()
+                        .stream()
+                        .findFirst()
                         .isPresent();
                 if (!found) {
                     session.save(new HibernatePubkeyChannelObject((PubkeyChannelObject) obj));
@@ -254,7 +281,9 @@ public class HibernateMemoryDBHandler implements DBHandler {
                                 HibernateChannelStatusObject.class)
                         .setParameter("pubkeyA", temp.pubkeyA)
                         .setParameter("pubkeyB", temp.pubkeyB)
-                        .uniqueResultOptional()
+                        .list()
+                        .stream()
+                        .findFirst()
                         .isPresent();
                 if (found) {
                     continue;
@@ -283,11 +312,9 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
         Optional<Channel> optional = session
-                .createQuery("from Channel where id = :id", HibernateChannel.class)
-                .setParameter("id", id)
-                .stream()
-                .map(HibernateChannel::toChannel)
-                .findFirst();
+                .byId(HibernateChannel.class)
+                .loadOptional(id)
+                .map(HibernateChannel::toChannel);
         tx.commit();
         session.close();
         if (optional.isPresent()) {
@@ -323,7 +350,8 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Transaction tx = session.beginTransaction();
         List<Channel> channels = session
                 .createQuery("from Channel where nodeKeyClient = :nodeKey", HibernateChannel.class)
-                .setParameter("nodeKey", nodeKey)
+                .setParameter("nodeKey", nodeKey.getPubKey())
+                .list()
                 .stream()
                 .map(HibernateChannel::toChannel)
                 .collect(Collectors.toList());
@@ -338,8 +366,9 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Transaction tx = session.beginTransaction();
         List<Channel> channels = session
                 .createQuery("from Channel where nodeKeyClient = :nodeKey and phase = :phase", HibernateChannel.class)
-                .setParameter("nodeKey", nodeKey)
+                .setParameter("nodeKey", nodeKey.getPubKey())
                 .setParameter("phase", OPEN)
+                .list()
                 .stream()
                 .map(HibernateChannel::toChannel)
                 .collect(Collectors.toList());
@@ -353,41 +382,8 @@ public class HibernateMemoryDBHandler implements DBHandler {
         Session session = sessionFactory.openSession();
         Transaction tx = session.beginTransaction();
         HibernateChannel hibernateChannel = new HibernateChannel(channel);
-        session.save(hibernateChannel);
-        if (channel.closingSignatures != null) {
-            channel.closingSignatures.forEach(signature -> {
-                HibernateClosingSignature closingSignature = new HibernateClosingSignature(signature);
-                closingSignature.setChannel(hibernateChannel);
-                hibernateChannel.getClosingSignatures().add(closingSignature);
-                session.save(closingSignature);
-            });
-        }
-        if (channel.channelSignatures != null) {
-            if (channel.channelSignatures.paymentSignatures != null) {
-                channel.channelSignatures.paymentSignatures.forEach(signature -> {
-                    HibernatePaymentSignature paymentSignature = new HibernatePaymentSignature(signature);
-                    paymentSignature.setChannel(hibernateChannel);
-                    hibernateChannel.getPaymentSignatures().add(paymentSignature);
-                    session.save(paymentSignature);
-                });
-            }
-            if (channel.channelSignatures.channelSignatures != null) {
-                channel.channelSignatures.channelSignatures.forEach(signature -> {
-                    HibernateChannelSignature channelSignature = new HibernateChannelSignature(signature);
-                    channelSignature.setChannel(hibernateChannel);
-                    hibernateChannel.getChannelSignatures().add(channelSignature);
-                    session.save(channelSignature);
-                });
-            }
-        }
-        if (channel.channelStatus != null && channel.channelStatus.paymentList != null) {
-            channel.channelStatus.paymentList.forEach(payment -> {
-                HibernatePaymentData paymentData = new HibernatePaymentData(payment);
-                paymentData.setChannel(hibernateChannel);
-                hibernateChannel.getChannelStatus().getPaymentList().add(paymentData);
-                session.save(paymentData);
-            });
-        }
+        session.persist(hibernateChannel);
+        hibernateChannel.saveChannelData(session, channel);
         tx.commit();
         session.close();
     }
@@ -427,7 +423,9 @@ public class HibernateMemoryDBHandler implements DBHandler {
                 session.close();
                 throw new RuntimeException("Not able to find channel in list, not updated..");
             } else {
-                session.save(new HibernateChannel(channel));
+                HibernateChannel hibernateChannel = new HibernateChannel(channel);
+                session.persist(hibernateChannel);
+                hibernateChannel.saveChannelData(session, channel);
                 tx.commit();
                 session.close();
             }
@@ -610,6 +608,7 @@ public class HibernateMemoryDBHandler implements DBHandler {
         List<Channel> channels = session
                 .createQuery("from Channel where phase = :phase", HibernateChannel.class)
                 .setParameter("phase", OPEN)
+                .list()
                 .stream()
                 .map(HibernateChannel::toChannel)
                 .collect(Collectors.toList());

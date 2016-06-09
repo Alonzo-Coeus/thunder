@@ -30,8 +30,8 @@ class AckProcessorImplTest {
     val node1 = ClientObject(serverObject2)
     val node2 = ClientObject(serverObject1)
 
-    val dbHandler1: DBHandler = HibernateMemoryDBHandler()
-    val dbHandler2: DBHandler = HibernateMemoryDBHandler()
+    val dbHandler1: DBHandler = HibernateMemoryDBHandler("ackProcessorOne")
+    val dbHandler2: DBHandler = HibernateMemoryDBHandler("ackProcessorTwo")
 
     val contextFactory1 = ContextFactoryImpl(serverObject1, dbHandler1, MockWallet(Constants.getNetwork()), LNEventHelperImpl());
     val contextFactory2 = ContextFactoryImpl(serverObject2, dbHandler2, MockWallet(Constants.getNetwork()), LNEventHelperImpl());

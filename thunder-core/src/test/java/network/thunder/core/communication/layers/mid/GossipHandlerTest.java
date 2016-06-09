@@ -41,10 +41,10 @@ public class GossipHandlerTest {
     ServerObject serverObject3 = new ServerObject();
     ServerObject serverObject4 = new ServerObject();
 
-    HibernateMemoryDBHandler dbHandler1 = new HibernateMemoryDBHandler();
-    HibernateMemoryDBHandler dbHandler2 = new HibernateMemoryDBHandler();
-    HibernateMemoryDBHandler dbHandler3 = new HibernateMemoryDBHandler();
-    HibernateMemoryDBHandler dbHandler4 = new HibernateMemoryDBHandler();
+    HibernateMemoryDBHandler dbHandler1 = new HibernateMemoryDBHandler("one");
+    HibernateMemoryDBHandler dbHandler2 = new HibernateMemoryDBHandler("two");
+    HibernateMemoryDBHandler dbHandler3 = new HibernateMemoryDBHandler("three");
+    HibernateMemoryDBHandler dbHandler4 = new HibernateMemoryDBHandler("four");
 
     ContextFactory contextFactory1 = new MockContextFactory(serverObject1, dbHandler1);
     ContextFactory contextFactory2 = new MockContextFactory(serverObject2, dbHandler2);

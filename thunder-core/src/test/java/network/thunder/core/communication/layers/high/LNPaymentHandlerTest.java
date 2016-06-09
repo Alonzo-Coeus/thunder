@@ -47,8 +47,8 @@ public class LNPaymentHandlerTest {
     LNPaymentProcessorImpl processor12;
     LNPaymentProcessorImpl processor21;
 
-    DBHandler dbHandler1 = new HibernateMemoryDBHandler();
-    DBHandler dbHandler2 = new HibernateMemoryDBHandler();
+    DBHandler dbHandler1 = new HibernateMemoryDBHandler("paymentHandlerOne");
+    DBHandler dbHandler2 = new HibernateMemoryDBHandler("paymentHandlerTwo");
 
     ContextFactory contextFactory12 = new MockContextFactory(serverObject1, dbHandler1);
     ContextFactory contextFactory21 = new MockContextFactory(serverObject2, dbHandler2);
